@@ -18,7 +18,7 @@ A simple usage example:
 $ python dynamodb-copy-table.py events-table copyof-events-table http://192.168.99.100:8000 true
 ```
 
-You can use the environment variables `AWS_DEFAULT_REGION` and `DISABLE_DATACOPY` to select the region (the default region is `us-west-2`) and disable the copying of data from source table to destination table.
+You can use the environment variables `AWS_DEFAULT_REGION` and `DISABLE_DATACOPY` to select the region (the default region is `local` for use with dynamodb-local with sharedDb enabled) and disable the copying of data from source table to destination table.
 
 ```shell
 $ AWS_DEFAULT_REGION=us-west-2 DISABLE_DATACOPY=no python dynamodb-copy-table.py events-table copyof-events-table http://192.168.99.100:8000 true
