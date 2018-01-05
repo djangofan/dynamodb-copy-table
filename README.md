@@ -1,5 +1,6 @@
 # dynamodb-copy-table
 A simple python script to copy dynamodb table
+NOTE: enhanced to work with dynamodb-local
 
 ---
 
