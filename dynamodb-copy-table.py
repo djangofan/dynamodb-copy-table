@@ -47,7 +47,8 @@ try:
     logs = Table(src_table, connection=ddbc)
     table_struct = logs.describe()
 except:
-    print "ERROR: Failure reading table %s" % src_table
+    #print "ERROR: Failure reading table %s" % src_table
+    print 'ERROR: Failure reading table {0} from region {1}'.format(src_table, tableRegion)
     sys.exit(1)
 
 print '*** Reading key schema from %s table' % src_table
