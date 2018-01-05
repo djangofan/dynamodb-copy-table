@@ -38,6 +38,7 @@ else:
 
 
 print '*** Starting copy event ...'
+print '*** Will timeout after 2+ minutes if it fails ...'
 
 # 1. Read and copy the target table to be copied
 # this will timeout if it fails , after about 2 minutes
