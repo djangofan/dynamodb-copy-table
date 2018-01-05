@@ -1,4 +1,12 @@
 #!/usr/bin/python2
+
+############
+# CMD Example:  AWS_DEFAULT_REGION=us-west-2 DISABLE_DATACOPY=no python dynamodb-copy-table.py events-table copyof-events-table http://192.168.99.100:8000 true
+# the default region is 'local', change it with the AWS_DEFAULT_REGION or AWS_REGION env variable.
+# region does not matter if your dynamodb-local is configured for 'sharedDb'
+# supports a DISABLE_DATACOPY option
+############
+
 from boto.dynamodb2.exceptions import ValidationException
 from boto.dynamodb2.fields import HashKey, RangeKey
 from boto.dynamodb2.layer1 import DynamoDBConnection
@@ -8,27 +16,37 @@ from time import sleep
 import sys
 import os
 
-if len(sys.argv) != 3:
-    print 'Usage: %s <source_table_name>' \
-        ' <destination_table_name>' % sys.argv[0]
+if len(sys.argv) != 5:
+    print 'Usage: %s <source_table_name> <destination_table_name> <dynamo_url> <isLocal>' % sys.argv[0]
     sys.exit(1)
 
 src_table = sys.argv[1]
 dst_table = sys.argv[2]
-region = os.getenv('AWS_DEFAULT_REGION', 'us-west-2')
+dynamoHost = sys.argv[3]
+isLocal = sys.argv[4]
+# using default of 'local' assuming your local dynamo is set to ignore region
+tableRegion = os.getenv('AWS_DEFAULT_REGION', os.getenv('AWS_REGION', 'local'))
+print '*** AWS client region is: ' + tableRegion
+print '*** Script running in local mode: ' + isLocal
 
-# host = 'dynamodb.%s.amazonaws.com' % region
-# ddbc = DynamoDBConnection(is_secure=False, region=region, host=host)
-DynamoDBConnection.DefaultRegionName = region
-ddbc = DynamoDBConnection()
+if not isLocal:
+    host = 'dynamodb.%s.amazonaws.com' % region
+    ddbc = DynamoDBConnection()
+    DynamoDBConnection.DefaultRegionName = tableRegion
+else:
+    ddbc = DynamoDBConnection(is_secure=False, region=tableRegion, host=dynamoHost)
+
+
+print '*** Starting copy event ...'
 
 # 1. Read and copy the target table to be copied
+# this will timeout if it fails , after about 2 minutes
 table_struct = None
 try:
     logs = Table(src_table, connection=ddbc)
     table_struct = logs.describe()
-except JSONResponseError:
-    print "Table %s does not exist" % src_table
+except:
+    print "ERROR: Failure reading table %s" % src_table
     sys.exit(1)
 
 print '*** Reading key schema from %s table' % src_table
@@ -43,6 +61,8 @@ for schema in src['KeySchema']:
     elif key_type == 'RANGE':
         range_key = attr_name
 
+print '*** Created new table ...'
+
 # 2. Create the new table
 table_struct = None
 try:
@@ -54,7 +74,7 @@ try:
                      )
 
     table_struct = new_logs.describe()
-    print 'Table %s already exists' % dst_table
+    print 'ERROR: Table %s already exists' % dst_table
     sys.exit(0)
 except JSONResponseError:
     schema = [HashKey(hash_key)]
@@ -72,6 +92,8 @@ except JSONResponseError:
 if 'DISABLE_DATACOPY' in os.environ:
     print 'Copying of data from source table is disabled. Exiting...'
     sys.exit(0)
+
+print '*** Adding items to new table ...'
 
 # 3. Add the items
 for item in logs.scan():
@@ -91,4 +113,4 @@ for item in logs.scan():
     except JSONResponseError:
         print ddbc.describe_table(dst_table)['Table']['TableStatus']
 
-print 'We are done. Exiting...'
+print 'SUCCESS: We are done. Exiting...'
