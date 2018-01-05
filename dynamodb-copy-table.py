@@ -7,6 +7,9 @@
 # supports a DISABLE_DATACOPY option
 ############
 
+# set local dynamo host
+localHost = 'http://192.168.99.100:8000'
+
 from boto.dynamodb2.exceptions import ValidationException
 from boto.dynamodb2.fields import HashKey, RangeKey
 from boto.dynamodb2.layer1 import DynamoDBConnection
@@ -32,7 +35,6 @@ if not isLocal:
     ddbc = DynamoDBConnection()
     DynamoDBConnection.DefaultRegionName = tableRegion
 else:
-    localHost = 'http://192.168.99.100:8000'
     print '*** Using Dynamo host: ' + localHost
     ddbc = DynamoDBConnection(is_secure=False, region=tableRegion, host=localHost)
 
