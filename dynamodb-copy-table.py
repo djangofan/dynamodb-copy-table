@@ -62,7 +62,7 @@ for schema in src['KeySchema']:
     elif key_type == 'RANGE':
         range_key = attr_name
 
-print '*** Created new table ...'
+print '*** Creating new table ...'
 
 # 2. Create the new table
 table_struct = None
