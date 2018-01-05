@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 
 ############
-# CMD Example:  AWS_DEFAULT_REGION=us-west-2 DISABLE_DATACOPY=no python dynamodb-copy-table.py events-table copyof-events-table http://192.168.99.100:8000 true
+# CMD Example:  AWS_DEFAULT_REGION=us-west-2 DISABLE_DATACOPY=no python dynamodb-copy-table.py events-table copyof-events-table true
 # the default region is 'local', change it with the AWS_DEFAULT_REGION or AWS_REGION env variable.
 # region does not matter if your dynamodb-local is configured for 'sharedDb'
 # supports a DISABLE_DATACOPY option
@@ -16,16 +16,14 @@ from time import sleep
 import sys
 import os
 
-if len(sys.argv) != 5:
-    print 'Usage: %s <source_table_name> <destination_table_name> <dynamo_url> <isLocal>' % sys.argv[0]
+if len(sys.argv) != 4:
+    print 'Usage: %s <source_table_name> <destination_table_name> <isLocal>' % sys.argv[0]
     sys.exit(1)
 
 src_table = sys.argv[1]
 dst_table = sys.argv[2]
-dynamoHost = sys.argv[3]
-isLocal = sys.argv[4]
-# using default of 'local' assuming your local dynamo is set to ignore region
-tableRegion = os.getenv('AWS_DEFAULT_REGION', os.getenv('AWS_REGION', 'local'))
+isLocal = sys.argv[3]
+tableRegion = os.getenv('AWS_DEFAULT_REGION', os.getenv('AWS_REGION', 'not-set'))
 print '*** AWS client region is: ' + tableRegion
 print '*** Script running in local mode: ' + isLocal
 
@@ -34,13 +32,15 @@ if not isLocal:
     ddbc = DynamoDBConnection()
     DynamoDBConnection.DefaultRegionName = tableRegion
 else:
-    ddbc = DynamoDBConnection(is_secure=False, region=tableRegion, host=dynamoHost)
+    localHost = 'http://192.168.99.100:8000'
+    ddbc = DynamoDBConnection(is_secure=False, region=tableRegion, host=localHost)
 
 
 print '*** Starting copy event ...'
-print '*** Will timeout after 2+ minutes if it fails ...'
+print '  - Will timeout after 2+ minutes if it fails ...'
 
 # 1. Read and copy the target table to be copied
+# this will timeout if it fails , after about 2 minutes
 table_struct = None
 try:
     logs = Table(src_table, connection=ddbc)
