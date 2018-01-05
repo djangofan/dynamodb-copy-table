@@ -33,6 +33,7 @@ if not isLocal:
     DynamoDBConnection.DefaultRegionName = tableRegion
 else:
     localHost = 'http://192.168.99.100:8000'
+    print '*** Using Dynamo host: ' + localHost
     ddbc = DynamoDBConnection(is_secure=False, region=tableRegion, host=localHost)
 
 
